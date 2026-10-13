@@ -76,7 +76,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient; branding?: PublicBranding }>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; branding?: PublicBranding | undefined }>()({
   beforeLoad: async ({ context }) => {
     const branding = await context.queryClient.ensureQueryData(brandingQueryOptions).catch(() => undefined);
     return { branding };

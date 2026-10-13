@@ -29,6 +29,6 @@ export const brandingQueryOptions = queryOptions({
 });
 
 /** Builds a page title from the router context's branding. */
-export function brandTitle(page: string, ctx: { branding?: PublicBranding } | undefined) {
+export function brandTitle(page: string, ctx: { branding?: PublicBranding | undefined } | undefined) {
   return `${page} — ${ctx?.branding?.name || DEFAULT_SCHOOL_NAME}`;
 }
