@@ -33,6 +33,7 @@ const QUICK_ACTION_IDS = [
 
 function PortalHome() {
   const { profile } = useSession();
+  const school = useSchoolName();
   const overviewFn = useServerFn(getPortalOverview);
   const { data: overview } = useQuery({
     queryKey: ["portal-overview"],

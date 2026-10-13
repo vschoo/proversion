@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { resolveProvisionedSchool } from "@/lib/school.server";
 import { assertPeriodOpen } from "@/lib/academic-calendar.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
