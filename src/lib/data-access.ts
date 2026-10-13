@@ -84,5 +84,5 @@ export function canExport(userRoles: string[], c: ExportControls): boolean {
 }
 
 export function watermarkText(schoolName: string, email: string, at: string) {
-  return `${schoolName || "School"} — exported by ${email || "unknown"} on ${at.slice(0, 16).replace("T", " ")} UTC — confidential`;
+  return `${schoolName} — exported by ${email || "unknown"} on ${at.slice(0, 16).replace("T", " ")} UTC — confidential`;
 }

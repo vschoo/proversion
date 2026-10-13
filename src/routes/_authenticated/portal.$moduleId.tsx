@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { Lock, Construction } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
@@ -24,9 +25,9 @@ import { useSchoolName } from "@/hooks/useSchoolName";
 
 
 export const Route = createFileRoute("/_authenticated/portal/$moduleId")({
-  head: ({ params }) => {
+  head: ({ params, match }) => {
     const mod = getModule(params.moduleId);
-    const title = `${mod?.name ?? "School Module"} — School Management Portal`;
+    const title = brandTitle(mod?.name ?? "School Module", match.context);
     const description = mod?.description ?? "School management module.";
     return { meta: [
       { title },

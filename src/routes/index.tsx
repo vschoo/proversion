@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,17 +15,17 @@ import { resolveStudentLogin } from "@/lib/admissions.functions";
 
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "School Management System — Sign In by Role" },
+      { title: brandTitle("Sign In by Role", match.context) },
       {
         name: "description",
         content:
           "Select your role and sign in to the unified School Management Portal. Access is granted by role and access level.",
       },
-      { property: "og:title", content: "School Management System — Sign In by Role" },
+      { property: "og:title", content: brandTitle("Sign In by Role", match.context) },
       {
         property: "og:description",
         content:

@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,10 +10,10 @@ import { ACCESS_LABEL, MODULE_CATEGORIES, ROLE_META, modulesFor } from "@/lib/ac
 import { getPortalOverview } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
-  head: () => ({ meta: [
-    { title: "My School Portal — School Management System" },
+  head: ({ match }) => ({ meta: [
+    { title: brandTitle("My School Portal", match.context) },
     { name: "description", content: "Your school modules, recent activity and account overview." },
-    { property: "og:title", content: "My School Portal — School Management System" },
+    { property: "og:title", content: brandTitle("My School Portal", match.context) },
     { property: "og:description", content: "Your school modules, recent activity and account overview." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
