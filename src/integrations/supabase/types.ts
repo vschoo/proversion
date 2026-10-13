@@ -1547,6 +1547,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_branding: {
+        Args: never
+        Returns: {
+          logo_url: string
+          name: string
+          tagline: string
+        }[]
+      }
       next_generated_number: { Args: { _kind: string }; Returns: string }
     }
     Enums: {
