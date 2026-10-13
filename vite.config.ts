@@ -15,5 +15,5 @@ export default defineConfig({
   // Vercel sets VERCEL=1 during its builds, so only there do we emit the
   // Vercel Build Output API (.vercel/output). Lovable builds keep the default
   // Cloudflare preset.
-  nitro: process.env.VERCEL ? { preset: "vercel" } : undefined,
+  ...(process.env["VERCEL"] ? { nitro: { preset: "vercel" } } : {}),
 });
