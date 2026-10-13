@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SessionProvider } from "@/hooks/useSession";
 import { Toaster } from "@/components/ui/sonner";
+import { brandingQueryOptions, DEFAULT_SCHOOL_NAME, type PublicBranding } from "@/lib/branding.functions";
 
 function NotFoundComponent() {
   return (
@@ -75,18 +76,22 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; branding?: PublicBranding | undefined }>()({
+  beforeLoad: async ({ context }) => {
+    const branding = await context.queryClient.ensureQueryData(brandingQueryOptions).catch(() => undefined);
+    return { branding };
+  },
+  head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "School Management System" },
+      { title: match.context.branding?.name || DEFAULT_SCHOOL_NAME },
       {
         name: "description",
         content:
           "Unified, role-based school management platform for administrators, staff, students and parents.",
       },
-      { property: "og:title", content: "School Management System" },
+      { property: "og:title", content: match.context.branding?.name || DEFAULT_SCHOOL_NAME },
       {
         property: "og:description",
         content:

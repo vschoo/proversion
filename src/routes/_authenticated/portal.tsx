@@ -1,5 +1,6 @@
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { DEFAULT_SCHOOL_NAME } from "@/hooks/useSchoolName";
+import { useSchoolName } from "@/hooks/useSchoolName";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -14,17 +15,17 @@ import { ForcePasswordChange } from "@/components/portal/ForcePasswordChange";
 import { useIdleLogout } from "@/hooks/useIdleLogout";
 
 export const Route = createFileRoute("/_authenticated/portal")({
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "School Management Portal — Unified Dashboard" },
+      { title: brandTitle("Unified Dashboard", match.context) },
       {
         name: "description",
         content:
           "The centralized School Management Portal. Every module you can access, in one place, based on your role and access level.",
       },
-      { property: "og:title", content: "School Management Portal — Unified Dashboard" },
+      { property: "og:title", content: brandTitle("Unified Dashboard", match.context) },
       {
         property: "og:description",
         content: "Centralized portal for all school modules, filtered by role and access level.",
@@ -38,6 +39,7 @@ function PortalLayout() {
   const { profile, loading, refresh } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const schoolName = useSchoolName();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -99,7 +101,7 @@ function PortalLayout() {
           </Button>
           <Link to="/portal" className="flex items-center gap-2.5">
             <School className="size-6" aria-hidden />
-            <span className="text-lg font-semibold">{overview?.schoolName || DEFAULT_SCHOOL_NAME}</span>
+            <span className="text-lg font-semibold">{schoolName.name}</span>
           </Link>
           <div className="ml-auto flex items-center gap-4">
             <div className="hidden text-right sm:block">

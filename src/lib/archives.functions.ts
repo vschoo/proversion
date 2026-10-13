@@ -1,3 +1,4 @@
+import { readBranding } from "./branding.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -122,7 +123,7 @@ export const getArchiveSummary = createServerFn({ method: "GET" })
     return {
       calendar: cal,
       sources,
-      schoolName: access.school?.name ?? "",
+      schoolName: (await readBranding(supabase)).name,
       canExport: canExport(access.roles, access.exportControls),
     };
   });
@@ -252,7 +253,7 @@ export const exportArchiveRecords = createServerFn({ method: "POST" })
     const r = await loadRecords(supabase, access, data, true);
     const { data: me } = await supabase.from("profiles").select("email").eq("id", context.userId).maybeSingle();
     const watermark = access.exportControls.watermark
-      ? watermarkText(access.school?.name ?? "", (me as any)?.email ?? "", new Date().toISOString())
+      ? watermarkText((await readBranding(supabase)).name, (me as any)?.email ?? "", new Date().toISOString())
       : null;
     await logAudit(supabase, context.userId, {
       action: "archive_exported",

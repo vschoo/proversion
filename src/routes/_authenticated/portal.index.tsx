@@ -1,3 +1,5 @@
+import { useSchoolName } from "@/hooks/useSchoolName";
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,10 +11,10 @@ import { ACCESS_LABEL, MODULE_CATEGORIES, ROLE_META, modulesFor } from "@/lib/ac
 import { getPortalOverview } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
-  head: () => ({ meta: [
-    { title: "My School Portal — School Management System" },
+  head: ({ match }) => ({ meta: [
+    { title: brandTitle("My School Portal", match.context) },
     { name: "description", content: "Your school modules, recent activity and account overview." },
-    { property: "og:title", content: "My School Portal — School Management System" },
+    { property: "og:title", content: brandTitle("My School Portal", match.context) },
     { property: "og:description", content: "Your school modules, recent activity and account overview." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -31,6 +33,7 @@ const QUICK_ACTION_IDS = [
 
 function PortalHome() {
   const { profile } = useSession();
+  const school = useSchoolName();
   const overviewFn = useServerFn(getPortalOverview);
   const { data: overview } = useQuery({
     queryKey: ["portal-overview"],
@@ -64,9 +67,9 @@ function PortalHome() {
     <div className="space-y-6">
       <section className="surface overflow-hidden">
         <div className="bg-ink px-6 py-7 text-ink-foreground">
-          {overview?.schoolName && (
+          {school.name && (
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {overview.schoolName}
+              {school.name}
             </p>
           )}
           <h1 className="text-2xl font-bold">Welcome, {profile.full_name || profile.email}</h1>

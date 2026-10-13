@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,17 +10,17 @@ import { Label } from "@/components/ui/label";
 import { getSetupStatus, runInitialSetup } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/setup")({
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "System Setup — School Management System" },
+      { title: brandTitle("System Setup", match.context) },
       {
         name: "description",
         content:
           "One-time setup to create the initial Super Administrator and School Manager accounts for the School Management System.",
       },
-      { property: "og:title", content: "System Setup — School Management System" },
+      { property: "og:title", content: brandTitle("System Setup", match.context) },
       {
         property: "og:description",
         content: "Create the initial Super Administrator and School Manager accounts.",

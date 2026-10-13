@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { resolveProvisionedSchool } from "@/lib/school.server";
 import { assertPeriodOpen } from "@/lib/academic-calendar.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -735,21 +734,13 @@ export const getPortalOverview = createServerFn({ method: "GET" })
       pendingResets = count ?? 0;
     }
 
-    const [{ data: settings }, { data: school }, { data: branding }] = await Promise.all([
-      context.supabase.from("security_settings").select("session_timeout").maybeSingle(),
-      resolveProvisionedSchool(context.supabase).then((data) => ({ data })),
-      context.supabase.from("school_branding").select("school_id, display_name, tagline"),
-    ]);
-    const brand = (branding ?? []).find((b) => b.school_id === school?.id);
+    const { data: settings } = await context.supabase.from("security_settings").select("session_timeout").maybeSingle();
 
     return {
       isAdmin: admin,
       activity: activity ?? [],
       pendingResets,
       sessionTimeout: settings?.session_timeout ?? 30,
-      /** The configured school's display name, shown on every portal page. */
-      schoolName: brand?.display_name?.trim() || school?.name || "",
-      schoolTagline: brand?.tagline ?? "",
     };
   });
 
