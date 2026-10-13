@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Building2,
@@ -146,6 +148,15 @@ export function SystemConfiguration() {
   const removeClass = useServerFn(deleteSchoolClass);
   const savePolicy = useServerFn(saveTenantSettings);
   const saveBrand = useServerFn(saveBranding);
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const refreshBranding = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["branding"] }),
+      queryClient.invalidateQueries({ queryKey: ["portal-overview"] }),
+    ]);
+    await router.invalidate();
+  };
   const saveNumbering = useServerFn(saveEmployeeNumbering);
 
   const [loading, setLoading] = useState(true);
@@ -278,7 +289,7 @@ export function SystemConfiguration() {
             schools={schools}
             busy={busy}
             onCreate={(payload) => run(() => addSchool({ data: payload }), "School provisioned")}
-            onUpdate={(payload) => run(() => editSchool({ data: payload }), "School updated")}
+            onUpdate={(payload) => run(async () => { await editSchool({ data: payload }); await refreshBranding(); }, "School updated")}
             onDelete={(id) => run(() => removeSchool({ data: { id } }), "School removed")}
           />
         </TabsContent>
@@ -348,7 +359,7 @@ export function SystemConfiguration() {
             school={school ?? null}
             branding={schoolBranding}
             busy={busy}
-            onSave={(payload) => run(() => saveBrand({ data: payload }), "Branding saved")}
+            onSave={(payload) => run(async () => { await saveBrand({ data: payload }); await refreshBranding(); }, "Branding saved")}
           />
         </TabsContent>
       </Tabs>

@@ -1,3 +1,4 @@
+import { useSchoolName } from "@/hooks/useSchoolName";
 import { brandTitle } from "@/lib/branding.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -65,9 +66,9 @@ function PortalHome() {
     <div className="space-y-6">
       <section className="surface overflow-hidden">
         <div className="bg-ink px-6 py-7 text-ink-foreground">
-          {overview?.schoolName && (
+          {school.name && (
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {overview.schoolName}
+              {school.name}
             </p>
           )}
           <h1 className="text-2xl font-bold">Welcome, {profile.full_name || profile.email}</h1>
