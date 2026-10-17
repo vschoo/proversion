@@ -232,10 +232,15 @@ export function UserFormDialog({
   // Only subjects offered at the education levels of the chosen classes.
   const subjectOptions = subjectsForClasses(classCatalog, subjectCatalog, form.teachingClasses);
   const toggleIn = (key: "teachingClasses" | "teachingSubjects", value: string, on: boolean) =>
-    setForm((f) => ({
-      ...f,
-      [key]: on ? [...f[key], value] : f[key].filter((v) => v !== value),
-    }));
+    setForm((f) => {
+      const next = { ...f, [key]: on ? [...f[key], value] : f[key].filter((v) => v !== value) };
+      // Dropping a class drops subjects no longer offered at the remaining classes' levels.
+      if (key === "teachingClasses") {
+        const allowed = new Set(subjectsForClasses(classCatalog, subjectCatalog, next.teachingClasses));
+        next.teachingSubjects = next.teachingSubjects.filter((s) => allowed.has(s));
+      }
+      return next;
+    });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
