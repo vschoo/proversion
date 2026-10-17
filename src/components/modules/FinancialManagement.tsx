@@ -46,6 +46,8 @@ import {
 } from "@/lib/finance";
 import { downloadCsv } from "@/lib/user-management";
 import { useFinanceConfig } from "@/hooks/useFinanceConfig";
+import { useSchoolClasses } from "@/hooks/useSchoolClasses";
+import { amountForLevel, appliesToLevel, levelOfClass } from "@/lib/education-levels";
 
 type Overview = Awaited<ReturnType<typeof getFinancialOverview>>;
 
@@ -768,7 +770,7 @@ function FeeDialog({
 }: {
   feeTypes: { value: string; label: string }[];
   feeItems: { code: string; name: string; metadata: Record<string, unknown> | null }[];
-  students: { id: string; student_name: string; admission_number: string | null }[];
+  students: { id: string; student_name: string; admission_number: string | null; class_admitted?: string | null }[];
   busy: boolean;
   onSubmit: (v: {
     admissionId: string;
@@ -785,15 +787,21 @@ function FeeDialog({
   const [term, setTerm] = useState<string>(feeTypes[0]?.label ?? "");
   const [amountDue, setAmountDue] = useState("");
   const activePeriod = period || cal.current?.name || "";
+  const { classes: classCatalog } = useSchoolClasses();
+  const studentLevel = levelOfClass(classCatalog, students.find((s) => s.id === admissionId)?.class_admitted);
   // Fee categories configured for this term/semester (coverage resolved from the calendar).
   const availableTypes = feeTypes.filter((t) => {
     const item = feeItems.find((i) => i.code === t.value);
-    return !item || coverageApplies(item.metadata?.["scope"] as string, item.metadata?.["period"] as string, activePeriod);
+    return (
+      !item ||
+      (coverageApplies(item.metadata?.["scope"] as string, item.metadata?.["period"] as string, activePeriod) &&
+        appliesToLevel(item.metadata, studentLevel))
+    );
   });
   const pickType = (label: string) => {
     setTerm(label);
     const item = feeItems.find((i) => i.name === label);
-    const amt = Number(item?.metadata?.["amount"] ?? 0);
+    const amt = amountForLevel(item?.metadata, studentLevel);
     if (amt > 0) setAmountDue(String(amt));
   };
   const [dueDate, setDueDate] = useState("");
