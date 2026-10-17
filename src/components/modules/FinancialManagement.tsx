@@ -822,7 +822,14 @@ function FeeDialog({
         </DialogHeader>
         <div className="space-y-4">
           <Field label="Student">
-            <Select value={admissionId} onValueChange={setAdmissionId}>
+            <Select
+              value={admissionId}
+              onValueChange={(v) => {
+                setAdmissionId(v);
+                setTerm("");
+                setAmountDue("");
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a student" />
               </SelectTrigger>
