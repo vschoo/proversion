@@ -481,10 +481,12 @@ export const getSubjectOptions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("subjects")
-      .select("name, active")
+      .select("name, level_code, active")
       .order("name");
     if (error) throw new Error(error.message);
-    return [...new Set((data ?? []).filter((s) => s.active !== false).map((s) => s.name))];
+    return (data ?? [])
+      .filter((s) => s.active !== false)
+      .map((s) => ({ name: s.name as string, levelCode: s.level_code as string }));
   });
 
 /* ------------------------------ classes ------------------------------ */

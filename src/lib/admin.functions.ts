@@ -157,13 +157,23 @@ async function syncTeachingAssignments(
 ) {
   await client.from("teaching_assignments").delete().eq("teacher_id", teacherId);
   if ((position ?? "").trim().toLowerCase() !== "teacher") return;
-  const rows = [...new Set(classes ?? [])].flatMap((className) =>
-    [...new Set(subjects ?? [])].map((subject) => ({
-      teacher_id: teacherId,
-      class_name: className,
-      subject,
-    })),
+  if (!classes?.length || !subjects?.length) return;
+  // Pair each subject only with classes at an education level that offers it.
+  const { teachingPairs } = await import("@/lib/education-levels");
+  const [{ data: classRows }, { data: subjectRows }] = await Promise.all([
+    client.from("school_classes").select("name, level_code"),
+    client.from("subjects").select("name, level_code").eq("active", true),
+  ]);
+  const { pairs, unmatched } = teachingPairs(
+    (classRows ?? []).map((c) => ({ name: c.name, levelCode: c.level_code })),
+    (subjectRows ?? []).map((s) => ({ name: s.name, levelCode: s.level_code })),
+    classes,
+    subjects,
   );
+  if (unmatched.length > 0) {
+    throw new Error(`${unmatched.join(", ")} is not offered at the education level of any selected class.`);
+  }
+  const rows = pairs.map((p) => ({ teacher_id: teacherId, ...p }));
   if (rows.length === 0) return;
   const { error } = await client.from("teaching_assignments").insert(rows);
   if (error) throw new Error(error.message);
