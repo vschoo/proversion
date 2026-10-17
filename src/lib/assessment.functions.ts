@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPeriodOpen, loadRules } from "@/lib/academic-calendar.server";
 import { activeAssessmentTypes } from "@/lib/academic-rules";
-import { assertTeaches, loadTeachingScope } from "@/lib/teaching.server";
+import { assertSubjectAtClassLevel, assertTeaches, loadTeachingScope } from "@/lib/teaching.server";
 import { assessmentIdSchema, assessmentInputSchema } from "@/lib/assessment.schemas";
 
 /** Students available for assessment entry — teachers see only classes they teach. */
@@ -68,6 +68,7 @@ export const saveAssessment = createServerFn({ method: "POST" })
     await assertPeriodOpen(context.supabase, { period: data.term });
     const scope = await loadTeachingScope(context.supabase, context.userId);
     assertTeaches(scope, data.className, data.subject);
+    await assertSubjectAtClassLevel(context.supabase, data.className, data.subject);
     const types = activeAssessmentTypes(await loadRules(context.supabase));
     if (!types.some((t) => t.toLowerCase() === data.assessmentType.toLowerCase())) {
       throw new Error(`"${data.assessmentType}" is not an active assessment type in Academic Configuration.`);

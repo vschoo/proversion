@@ -701,6 +701,67 @@ function Field({
   );
 }
 
+/* --------------------------- education-level scope --------------------------- */
+
+const levelName = (code: string) => code.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/**
+ * Which education levels an entry applies to (none ticked = every level),
+ * with an optional amount per level. Stored in the entry's metadata and read
+ * through src/lib/education-levels.ts everywhere.
+ */
+function LevelScopeFields({
+  metadata,
+  hasAmount,
+  onChange,
+}: {
+  metadata: Record<string, string>;
+  hasAmount: boolean;
+  onChange: (m: Record<string, string>) => void;
+}) {
+  const { classes } = useSchoolClasses();
+  const levels = [...new Set(classes.map((c) => c.levelCode))];
+  if (levels.length === 0) return null;
+  const chosen = itemLevels(metadata);
+  const toggle = (code: string, on: boolean) => {
+    const next = on ? [...chosen, code] : chosen.filter((c) => c !== code);
+    const m = { ...metadata, [LEVELS_KEY]: next.join(",") };
+    if (!on) delete m[`${LEVEL_AMOUNT_PREFIX}${code}`];
+    onChange(m);
+  };
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <Label>Education levels</Label>
+      <p className="text-xs text-muted-foreground">
+        Leave all unticked if this applies to every level.{hasAmount ? " Set an amount per level where it differs." : ""}
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {levels.map((code) => {
+          const on = chosen.includes(code);
+          return (
+            <div key={code} className="flex items-center gap-2">
+              <label className="flex flex-1 items-center gap-2 text-sm">
+                <Checkbox checked={on} onCheckedChange={(v) => toggle(code, v === true)} />
+                {levelName(code)}
+              </label>
+              {hasAmount && on ? (
+                <Input
+                  aria-label={`Amount for ${levelName(code)}`}
+                  type="number"
+                  className="h-8 w-28"
+                  placeholder="Base"
+                  value={metadata[`${LEVEL_AMOUNT_PREFIX}${code}`] ?? ""}
+                  onChange={(e) => onChange({ ...metadata, [`${LEVEL_AMOUNT_PREFIX}${code}`]: e.target.value })}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ list editor ------------------------------ */
 
 const blankItem = () => ({
@@ -840,6 +901,11 @@ function ListSection({
                   onChange={(v) => setForm((s) => ({ ...s, metadata: { ...s.metadata, [f.key]: v } }))}
                 />
               ))}
+              <LevelScopeFields
+                hasAmount={(section.itemFields ?? []).some((f) => f.key === "amount")}
+                metadata={form.metadata}
+                onChange={(metadata) => setForm((s) => ({ ...s, metadata }))}
+              />
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor={`li-desc-${section.key}`}>Description</Label>
                 <Input

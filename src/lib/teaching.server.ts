@@ -42,3 +42,21 @@ export function assertTeaches(scope: TeachingScope, className: string, subject: 
   );
   if (!ok) throw new Error(`You are not assigned to teach ${subject} in ${className || "this class"}.`);
 }
+
+/** Refuse a class/subject combination whose subject is not offered at the class's education level. */
+export async function assertSubjectAtClassLevel(supabase: any, className: string, subject: string) {
+  const { levelOfClass } = await import("@/lib/education-levels");
+  const [{ data: classes }, { data: subjects }] = await Promise.all([
+    supabase.from("school_classes").select("name, level_code"),
+    supabase.from("subjects").select("name, level_code").eq("active", true),
+  ]);
+  const level = levelOfClass(
+    ((classes ?? []) as { name: string; level_code: string }[]).map((c) => ({ name: c.name, levelCode: c.level_code })),
+    className,
+  );
+  if (!level) throw new Error(`Class ${className} is not set up under System Configuration → Classes.`);
+  const ok = ((subjects ?? []) as { name: string; level_code: string }[]).some(
+    (s) => s.level_code === level && s.name.trim().toLowerCase() === subject.trim().toLowerCase(),
+  );
+  if (!ok) throw new Error(`${subject} is not offered at the education level of ${className}.`);
+}

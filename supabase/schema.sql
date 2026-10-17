@@ -334,6 +334,7 @@ CREATE TABLE IF NOT EXISTS public.teaching_assignments (
 );
 CREATE INDEX IF NOT EXISTS teaching_assignments_teacher_idx ON public.teaching_assignments (teacher_id);
 CREATE INDEX IF NOT EXISTS teaching_assignments_class_idx ON public.teaching_assignments (class_name);
+CREATE INDEX IF NOT EXISTS subjects_level_name_idx ON public.subjects (level_code, lower(name));
 
 -- ----------------------------------------------------------------------------
 -- 6. Students
@@ -678,6 +679,26 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   ORDER BY s.active DESC, s.created_at ASC LIMIT 1
 $$;
 
+-- A teacher's subject must be offered at the education level of the class it is paired with.
+CREATE OR REPLACE FUNCTION public.validate_teaching_assignment()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE class_level text;
+BEGIN
+  SELECT c.level_code INTO class_level FROM public.school_classes c
+  WHERE lower(c.name) = lower(btrim(NEW.class_name)) ORDER BY c.active DESC LIMIT 1;
+  IF class_level IS NULL THEN
+    RAISE EXCEPTION 'Class "%" is not set up under System Configuration → Classes.', NEW.class_name
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.subjects s
+                 WHERE lower(s.name) = lower(btrim(NEW.subject)) AND s.level_code = class_level AND s.active) THEN
+    RAISE EXCEPTION 'Subject "%" is not offered at the education level of class "%".', NEW.subject, NEW.class_name
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END; $$;
+REVOKE EXECUTE ON FUNCTION public.validate_teaching_assignment() FROM PUBLIC, anon, authenticated;
+
 -- ----------------------------------------------------------------------------
 -- 9. Triggers
 -- ----------------------------------------------------------------------------
@@ -702,6 +723,8 @@ CREATE OR REPLACE TRIGGER profiles_admission_number BEFORE INSERT OR UPDATE ON p
   FOR EACH ROW EXECUTE FUNCTION public.assign_admission_number();
 CREATE OR REPLACE TRIGGER admissions_number BEFORE INSERT ON public.admissions
   FOR EACH ROW EXECUTE FUNCTION public.assign_admission_row_number();
+CREATE OR REPLACE TRIGGER teaching_assignments_level_check BEFORE INSERT OR UPDATE OF class_name, subject ON public.teaching_assignments
+  FOR EACH ROW EXECUTE FUNCTION public.validate_teaching_assignment();
 
 -- ----------------------------------------------------------------------------
 -- 10. Grants & RLS (centralised)

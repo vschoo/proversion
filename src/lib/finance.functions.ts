@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { assertPeriodOpen, calendarPeriodEnd } from "@/lib/academic-calendar.server";
-import { periodOfLabel } from "@/lib/academic-calendar";
+import { PERIOD_SEP, periodOfLabel } from "@/lib/academic-calendar";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logAudit } from "@/lib/admin.server";
 import {
@@ -11,6 +11,32 @@ import {
   incomeSchema,
   payrollSchema,
 } from "@/lib/finance.schemas";
+
+/**
+ * Refuse a fee whose configured category is not applicable at the student's
+ * education level (Financial Configuration → fee categories → levels).
+ */
+async function assertFeeAppliesToStudent(supabase: any, admissionId: string, term: string) {
+  const feeName = term.split(PERIOD_SEP)[1]?.trim();
+  if (!feeName) return;
+  const { appliesToLevel, levelOfClass } = await import("@/lib/education-levels");
+  const [{ data: student }, { data: items }, { data: classes }] = await Promise.all([
+    supabase.from("admissions").select("class_admitted").eq("id", admissionId).maybeSingle(),
+    supabase.from("finance_reference_items").select("name, metadata").eq("list_key", "fee-categories").eq("active", true),
+    supabase.from("school_classes").select("name, level_code"),
+  ]);
+  const item = ((items ?? []) as { name: string; metadata: Record<string, unknown> }[]).find(
+    (i) => i.name.trim().toLowerCase() === feeName.toLowerCase(),
+  );
+  if (!item) return;
+  const level = levelOfClass(
+    ((classes ?? []) as { name: string; level_code: string }[]).map((c) => ({ name: c.name, levelCode: c.level_code })),
+    student?.class_admitted,
+  );
+  if (!appliesToLevel(item.metadata, level)) {
+    throw new Error(`${item.name} does not apply at the education level of ${student?.class_admitted ?? "this student's class"}.`);
+  }
+}
 
 /** Everything the Financial Management module needs, in one round trip. */
 export const getFinancialOverview = createServerFn({ method: "GET" })
@@ -187,6 +213,7 @@ export const addStudentFee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPeriodOpen(context.supabase, { period: periodOfLabel(data.term) });
     await assertAdmin(context.supabase, context.userId);
+    await assertFeeAppliesToStudent(context.supabase, data.admissionId, data.term);
     const { error } = await context.supabase.from("student_fees").insert({
       admission_id: data.admissionId,
       term: data.term,
