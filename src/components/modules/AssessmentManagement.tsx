@@ -76,7 +76,8 @@ export function AssessmentManagement() {
   const rules = useAcademicRules();
   const types = activeAssessmentTypes(rules);
   const { names: allClasses } = useSchoolClasses();
-  const { subjects: allSubjects } = useSubjectOptions();
+  const { catalog: subjectCatalog } = useSubjectOptions();
+  const { classes: classCatalog } = useSchoolClasses();
   const [scope, setScope] = useState<Awaited<ReturnType<typeof getMyTeachingScope>> | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [rows, setRows] = useState<AssessmentRow[]>([]);

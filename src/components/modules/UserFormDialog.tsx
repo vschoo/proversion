@@ -137,6 +137,7 @@ import { useSubjectOptions } from "@/hooks/useSubjectOptions";
 import { useServerFn } from "@tanstack/react-start";
 import { getTeachingAssignments } from "@/lib/teaching.functions";
 import { isTeacherPosition, splitAssignments } from "@/lib/teaching";
+import { subjectsForClasses } from "@/lib/education-levels";
 
 export function UserFormDialog({
   open,
@@ -158,8 +159,8 @@ export function UserFormDialog({
   const { symbol: currencySymbol } = useFinanceConfig();
   const editing = Boolean(account);
   const { positions, departments } = useTenantOptions();
-  const { names: configuredClasses } = useSchoolClasses();
-  const { subjects: subjectOptions } = useSubjectOptions();
+  const { names: configuredClasses, classes: classCatalog } = useSchoolClasses();
+  const { catalog: subjectCatalog } = useSubjectOptions();
   const loadTeaching = useServerFn(getTeachingAssignments);
   const classOptions = configuredClasses.length ? configuredClasses : CLASSES;
   const [form, setForm] = useState<UserFormValues>(emptyForm());
@@ -228,6 +229,8 @@ export function UserFormDialog({
       teachingSubjects: isTeacherPosition(position) ? f.teachingSubjects : [],
     }));
 
+  // Only subjects offered at the education levels of the chosen classes.
+  const subjectOptions = subjectsForClasses(classCatalog, subjectCatalog, form.teachingClasses);
   const toggleIn = (key: "teachingClasses" | "teachingSubjects", value: string, on: boolean) =>
     setForm((f) => ({
       ...f,
@@ -463,8 +466,9 @@ export function UserFormDialog({
                   <p className="mb-2 text-sm font-medium">Subjects taught</p>
                   {subjectOptions.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      No subjects have been set up yet — add them under System Configuration →
-                      Subjects.
+                      {form.teachingClasses.length === 0
+                        ? "Pick a class first — subjects follow its education level."
+                        : "No subjects are set up for these classes' education levels — add them under System Configuration → Subjects."}
                     </p>
                   ) : (
                     <div className="grid max-h-48 gap-2 overflow-y-auto">
