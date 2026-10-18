@@ -29,3 +29,4 @@
 - Learner attendance/score summaries are computed only by src/lib/student-summary.ts, grouped by academic-calendar periods; long lists use the shared usePaged/Pager in src/components/portal/Paged.tsx.
 - School name/tagline/logo are read only via get_public_branding() (src/lib/branding.*, useSchoolName, router context for titles); tables stay admin-only — exposes the name without widening table access.
 - The full database is defined by supabase/schema.sql (idempotent: safe on fresh and existing databases); every schema change must be mirrored there in the same idempotent style — one canonical schema, no duplicate SQL copies.
+- Education-level scoping (class → level, subject ↔ class level, finance item applicability and per-level amounts in item metadata) is decided only in src/lib/education-levels.ts; the database trigger validate_teaching_assignment backs teacher pairs — one rule set shared by UI, server and database.

@@ -728,7 +728,7 @@ function LevelScopeFields({
   const chosen = itemLevels(metadata);
   const toggle = (code: string, on: boolean) => {
     const next = on ? [...chosen, code] : chosen.filter((c) => c !== code);
-    const m = { ...metadata, [LEVELS_KEY]: next.join(",") };
+    const m: Record<string, string> = { ...metadata, [LEVELS_KEY]: next.join(",") };
     if (!on) delete m[`${LEVEL_AMOUNT_PREFIX}${code}`];
     onChange(m);
   };
