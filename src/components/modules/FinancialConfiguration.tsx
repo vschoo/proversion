@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useSchoolClasses } from "@/hooks/useSchoolClasses";
+import { itemLevels, LEVEL_AMOUNT_PREFIX, LEVELS_KEY } from "@/lib/education-levels";
 import { previewNumber } from "@/lib/numbering";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -960,6 +963,9 @@ function ListSection({
                     <p className="text-xs text-muted-foreground">{i.description}</p>
                   ) : null}
                   <ItemSummary section={section} metadata={i.metadata ?? {}} />
+                  <p className="text-xs text-muted-foreground">
+                    Levels: {itemLevels(i.metadata).map(levelName).join(", ") || "All levels"}
+                  </p>
                 </div>
                 {readOnly ? null : (
                   <div className="flex gap-1.5">
